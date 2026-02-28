@@ -5,11 +5,14 @@ const fs = require('fs');
 const path = require('path');
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 const DATA_FILE = path.join(__dirname, 'posts.json');
 
 app.use(cors());
 app.use(bodyParser.json({ limit: '10mb' }));
+
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, 'dist')));
 
 // Initial data if file doesn't exist
 const INITIAL_POSTS = [
