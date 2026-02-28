@@ -70,12 +70,28 @@ function App() {
   const [imagePreview, setImagePreview] = useState(null);
 
   // Load posts from backend
+  // Load posts from backend (with fallback)
   useEffect(() => {
     fetch('/api/posts')
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error('API Error');
+        return res.json();
+      })
       .then(data => setPosts(data))
-      .catch(err => console.error("Veriler yüklenemedi:", err));
+      .catch(err => {
+        const saved = localStorage.getItem('daily_dev_posts_fallback');
+        if (saved) {
+          setPosts(JSON.parse(saved));
+        } else {
+          setPosts(INITIAL_POSTS);
+        }
+      });
   }, []);
+
+  // Save to localStorage as a fallback backup whenever posts change
+  useEffect(() => {
+    localStorage.setItem('daily_dev_posts_fallback', JSON.stringify(posts));
+  }, [posts]);
 
   useEffect(() => {
     setSelectedTag(null);
@@ -88,16 +104,17 @@ function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newPost)
       });
-      if (response.ok) {
-        const addedPost = await response.json();
-        setPosts([addedPost, ...posts]);
-        setShowAdminForm(false);
-        setSelectedCategoriesInForm([]);
-        setImagePreview(null);
-      }
+      if (!response.ok) throw new Error('API Error');
+      const addedPost = await response.json();
+      setPosts([addedPost, ...posts]);
     } catch (err) {
-      alert("Gönderi eklenirken bir hata oluştu!");
+      // Fallback
+      newPost.id = Date.now();
+      setPosts([newPost, ...posts]);
     }
+    setShowAdminForm(false);
+    setSelectedCategoriesInForm([]);
+    setImagePreview(null);
   };
 
   const deletePost = async (e, id) => {
@@ -108,11 +125,11 @@ function App() {
         const response = await fetch(`/api/posts/${id}`, {
           method: 'DELETE'
         });
-        if (response.ok) {
-          setPosts(posts.filter(p => p.id !== id));
-        }
+        if (!response.ok) throw new Error('API Error');
+        setPosts(posts.filter(p => p.id !== id));
       } catch (err) {
-        alert("Gönderi silinirken bir hata oluştu!");
+        // Fallback
+        setPosts(posts.filter(p => p.id !== id));
       }
     }
   };
