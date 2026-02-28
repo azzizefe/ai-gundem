@@ -79,8 +79,9 @@ function App() {
       })
       .then(data => setPosts(data))
       .catch(err => {
-        const saved = localStorage.getItem('daily_dev_posts_fallback');
-        if (saved) {
+        // Fallback to old key or new fallback key
+        const saved = localStorage.getItem('daily_dev_posts_fallback') || localStorage.getItem('daily_dev_posts');
+        if (saved && saved !== '[]') {
           setPosts(JSON.parse(saved));
         } else {
           setPosts(INITIAL_POSTS);
@@ -90,7 +91,11 @@ function App() {
 
   // Save to localStorage as a fallback backup whenever posts change
   useEffect(() => {
-    localStorage.setItem('daily_dev_posts_fallback', JSON.stringify(posts));
+    if (posts.length > 0) {
+      localStorage.setItem('daily_dev_posts_fallback', JSON.stringify(posts));
+      // Migrate old data
+      localStorage.setItem('daily_dev_posts', JSON.stringify(posts));
+    }
   }, [posts]);
 
   useEffect(() => {
