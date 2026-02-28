@@ -73,6 +73,11 @@ app.delete('/api/posts/:id', (req, res) => {
     res.status(204).send();
 });
 
+// All other requests should return the React app
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
 app.listen(PORT, () => {
     console.log(`Backend server running at http://localhost:${PORT}`);
 });
