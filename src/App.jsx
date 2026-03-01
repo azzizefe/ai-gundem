@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Plus, LayoutGrid, Flame, Compass, Bookmark, Trash2, LogIn, LogOut, X, Camera, Info, Send, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Search, Bell, Plus, LayoutGrid, Flame, Compass, Bookmark, Trash2, LogIn, LogOut, X, Camera, Info, Send, CheckCircle, XCircle, Clock, Edit2 } from 'lucide-react';
 import './App.css';
 
 const INITIAL_POSTS = [
@@ -78,6 +78,7 @@ function App() {
   const [suggestCategoriesInForm, setSuggestCategoriesInForm] = useState([]);
   const [editingPending, setEditingPending] = useState({});
   const [suggestImagePreview, setSuggestImagePreview] = useState(null);
+  const [editingPost, setEditingPost] = useState(null);
 
   // Load posts from backend
   // Load posts from backend (with fallback)
@@ -155,10 +156,20 @@ function App() {
         if (!response.ok) throw new Error('API Error');
         setPosts(posts.filter(p => p.id !== id));
       } catch (err) {
-        // Fallback
         setPosts(posts.filter(p => p.id !== id));
       }
     }
+  };
+
+  const startEditPost = (e, post) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setEditingPost({ ...post });
+  };
+
+  const saveEditPost = () => {
+    setPosts(prev => prev.map(p => p.id === editingPost.id ? editingPost : p));
+    setEditingPost(null);
   };
 
   const handleLogin = (e) => {
@@ -389,6 +400,11 @@ function App() {
                   </button>
                 )}
                 {isLogged && (
+                  <button className="edit-btn" onClick={(e) => startEditPost(e, post)} title="Düzenle">
+                    <Edit2 size={16} />
+                  </button>
+                )}
+                {isLogged && (
                   <button className="delete-btn" onClick={(e) => deletePost(e, post.id)}>
                     <Trash2 size={16} />
                   </button>
@@ -398,6 +414,60 @@ function App() {
           </div>
         </main>
       </div>
+
+      {/* Edit Post Modal */}
+      {editingPost && (
+        <div className="modal-overlay" onClick={() => setEditingPost(null)}>
+          <div className="modal-content admin-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Gönderiyi Düzenle</h2>
+              <button onClick={() => setEditingPost(null)}><X size={24} /></button>
+            </div>
+            <div className="form-grid">
+              <div className="form-group">
+                <label>Başlık</label>
+                <input
+                  value={editingPost.title}
+                  onChange={e => setEditingPost({ ...editingPost, title: e.target.value })}
+                />
+              </div>
+              <div className="form-group">
+                <label>Link</label>
+                <input
+                  value={editingPost.link}
+                  onChange={e => setEditingPost({ ...editingPost, link: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="form-group">
+              <label>Yazar</label>
+              <input
+                value={editingPost.author}
+                onChange={e => setEditingPost({ ...editingPost, author: e.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <label>Özet Açıklama</label>
+              <textarea
+                value={editingPost.summary}
+                onChange={e => setEditingPost({ ...editingPost, summary: e.target.value })}
+              />
+            </div>
+            <div className="form-group">
+              <label>Detaylı Açıklama</label>
+              <textarea
+                rows="5"
+                value={editingPost.description || ''}
+                onChange={e => setEditingPost({ ...editingPost, description: e.target.value })}
+              />
+            </div>
+            <div className="modal-actions">
+              <button type="button" className="cancel-btn" onClick={() => setEditingPost(null)}>Vazgeç</button>
+              <button type="button" className="submit-btn" onClick={saveEditPost}>Kaydet</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Login Modal */}
       {showLoginModal && (
