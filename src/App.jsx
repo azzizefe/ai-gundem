@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Plus, LayoutGrid, Flame, Compass, Bookmark, Trash2, LogIn, LogOut, X, Camera } from 'lucide-react';
+import { Search, Bell, Plus, LayoutGrid, Flame, Compass, Bookmark, Trash2, LogIn, LogOut, X, Camera, Info } from 'lucide-react';
 import './App.css';
 
 const INITIAL_POSTS = [
@@ -7,6 +7,7 @@ const INITIAL_POSTS = [
     id: 1,
     title: "React Server Components Rehberi",
     summary: "RSC'nin nasıl çalıştığı ve React geliştirmenin geleceği neden bu olduğu üzerine derinlemesine bir bakış.",
+    description: "React Server Components (RSC), React ekosisteminde devrim niteliğinde bir yenilik olarak karşımıza çıkıyor. Geleneksel client-side rendering yaklaşımından farklı olarak, RSC bileşenlerin sunucu tarafında render edilmesine olanak tanır. Bu sayede JavaScript bundle boyutu önemli ölçüde küçülür, sayfa yükleme süreleri dramatik şekilde iyileşir ve SEO performansı artar.\n\nRSC'nin temel avantajları arasında veritabanı sorgularının doğrudan bileşen içinden yapılabilmesi, hassas verilerin istemciye gönderilmemesi ve otomatik kod bölme (code splitting) yer alır. Ayrıca streaming SSR desteği sayesinde kullanıcılar sayfanın hazır olan kısımlarını anında görebilir.\n\nBu rehberde RSC mimarisini, Server ve Client bileşenleri arasındaki farkları, veri fetching stratejilerini ve production ortamında en iyi uygulamaları detaylı şekilde inceleyeceğiz.",
     image: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&q=80",
     categories: ["Frontend"],
     tag: "React",
@@ -18,6 +19,7 @@ const INITIAL_POSTS = [
     id: 2,
     title: "Ölçeklenebilir Yapay Zeka Uygulamaları",
     summary: "LLM'leri üretim ortamınıza entegre etmek için en iyi uygulamaları ve Chatbot stratejilerini öğrenin.",
+    description: "Büyük Dil Modelleri (LLM) artık sadece araştırma projelerinde değil, gerçek dünya uygulamalarında da aktif olarak kullanılıyor. Ancak bir LLM'i production ortamına taşımak, prototip aşamasından çok daha karmaşık bir süreçtir.\n\nBu kapsamlı rehberde, LLM tabanlı chatbot ve asistan uygulamalarını ölçeklenebilir şekilde nasıl tasarlayacağınızı öğreneceksiniz. Prompt engineering teknikleri, RAG (Retrieval-Augmented Generation) mimarisi, fine-tuning stratejileri ve maliyet optimizasyonu gibi kritik konuları ele alıyoruz.\n\nAyrıca rate limiting, token yönetimi, cache stratejileri, güvenlik önlemleri ve kullanıcı deneyimi tasarımı gibi production-grade konuları da detaylı şekilde inceliyoruz. Gerçek dünya örnekleri ve kod snippets ile desteklenen bu rehber, yapay zeka uygulamalarınızı bir sonraki seviyeye taşıyacak.",
     image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&q=80",
     categories: ["Yapay Zeka"],
     tag: "Chatbot",
@@ -29,6 +31,7 @@ const INITIAL_POSTS = [
     id: 3,
     title: "2026 İçin En İyi 10 Güvenlik Duruşu",
     summary: "Pentest ve modern sıfır gün açıklarına karşı altyapınızı nasıl koruyacağınızı öğrenin.",
+    description: "Siber güvenlik dünyası her geçen gün daha karmaşık hale geliyor ve 2026 yılı için hazırlıklı olmak şart. Bu makalede, altyapınızı korumak için uygulamanız gereken en kritik 10 güvenlik stratejisini ele alıyoruz.\n\nZero-day açıklarından korunma yöntemleri, penetrasyon testi (pentest) metodolojileri, ağ segmentasyonu, Zero Trust mimarisi, endpoint güvenliği ve olay müdahale planları gibi konuları derinlemesine inceliyoruz.\n\nAyrıca sosyal mühendislik saldırılarına karşı çalışan farkındalığı eğitimleri, bulut güvenliği best practice'leri, SIEM ve SOC operasyonları ve düzenleyici uyumluluk (KVKK, GDPR) gereksinimleri hakkında pratik bilgiler sunuyoruz. Her bir güvenlik duruşu, gerçek dünya saldırı senaryolarıyla desteklenerek açıklanmaktadır.",
     image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80",
     categories: ["Siber Güvenlik"],
     tag: "Pentest",
@@ -68,6 +71,7 @@ function App() {
   const [selectedTag, setSelectedTag] = useState(null);
   const [selectedCategoriesInForm, setSelectedCategoriesInForm] = useState([]);
   const [imagePreview, setImagePreview] = useState(null);
+  const [selectedInfoPost, setSelectedInfoPost] = useState(null);
 
   // Load posts from backend
   // Load posts from backend (with fallback)
@@ -297,6 +301,11 @@ function App() {
                     </div>
                   </div>
                 </a>
+                {post.description && (
+                  <button className="info-btn" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedInfoPost(post); }} title="Detaylı Bilgi">
+                    <Info size={16} />
+                  </button>
+                )}
                 {isLogged && (
                   <button className="delete-btn" onClick={(e) => deletePost(e, post.id)}>
                     <Trash2 size={16} />
@@ -350,6 +359,7 @@ function App() {
                 id: Date.now(),
                 title: formData.get('title'),
                 summary: formData.get('summary'),
+                description: formData.get('description') || '',
                 categories: selectedCategoriesInForm,
                 tag: formData.get('tag'),
                 image: imagePreview || 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800&q=80',
@@ -400,6 +410,10 @@ function App() {
                 <textarea name="summary" required placeholder="Okuyucular için kısa bir özet yazın..." />
               </div>
               <div className="form-group">
+                <label>Detaylı Açıklama (Bilgi butonu için)</label>
+                <textarea name="description" rows="6" placeholder="Bilgi butonuna tıklandığında gösterilecek uzun açıklama metni yazın..." />
+              </div>
+              <div className="form-group">
                 <label>Fotoğraf</label>
                 <div className="image-upload-wrapper">
                   <input
@@ -438,6 +452,42 @@ function App() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Info Detail Modal */}
+      {selectedInfoPost && (
+        <div className="modal-overlay" onClick={() => setSelectedInfoPost(null)}>
+          <div className="modal-content info-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>{selectedInfoPost.title}</h2>
+              <button onClick={() => setSelectedInfoPost(null)}><X size={24} /></button>
+            </div>
+            <div className="info-modal-body">
+              <div className="info-modal-image">
+                <img src={selectedInfoPost.image} alt={selectedInfoPost.title} />
+                <div className="info-modal-categories">
+                  {(selectedInfoPost.categories || [selectedInfoPost.category]).map(cat => (
+                    <span key={cat} className="post-category-tag">{cat}</span>
+                  ))}
+                </div>
+              </div>
+              <div className="info-modal-meta">
+                <span>{selectedInfoPost.author}</span>
+                <span>•</span>
+                <span>{selectedInfoPost.date}</span>
+                {selectedInfoPost.tag && <span className="info-modal-tag">{selectedInfoPost.tag}</span>}
+              </div>
+              <div className="info-modal-description">
+                {selectedInfoPost.description.split('\n').map((paragraph, i) => (
+                  <p key={i}>{paragraph}</p>
+                ))}
+              </div>
+              <a href={selectedInfoPost.link} target="_blank" rel="noopener noreferrer" className="info-modal-link">
+                Habere Git →
+              </a>
+            </div>
           </div>
         </div>
       )}
