@@ -76,6 +76,7 @@ function App() {
   const [pendingPosts, setPendingPosts] = useState([]);
   const [showPendingModal, setShowPendingModal] = useState(false);
   const [suggestCategoriesInForm, setSuggestCategoriesInForm] = useState([]);
+  const [editingPending, setEditingPending] = useState({});
   const [suggestImagePreview, setSuggestImagePreview] = useState(null);
 
   // Load posts from backend
@@ -212,17 +213,30 @@ function App() {
     alert('Gönderi öneriniz alındı! Admin onayından sonra yayınlanacaktır.');
   };
 
-  const approvePost = (post) => {
-    const approvedPost = { ...post };
+  const approvePost = (e, post) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const edits = editingPending[post.id] || {};
+    const approvedPost = { ...post, ...edits };
     delete approvedPost.status;
     approvedPost.date = 'Bugün';
-    setPosts([approvedPost, ...posts]);
-    setPendingPosts(pendingPosts.filter(p => p.id !== post.id));
+    setPosts(prev => [approvedPost, ...prev]);
+    setPendingPosts(prev => prev.filter(p => p.id !== post.id));
+    setEditingPending(prev => { const n = { ...prev }; delete n[post.id]; return n; });
   };
 
-  const rejectPost = (id) => {
+  const updatePendingField = (postId, field, value) => {
+    setEditingPending(prev => ({
+      ...prev,
+      [postId]: { ...(prev[postId] || {}), [field]: value }
+    }));
+  };
+
+  const rejectPost = (e, id) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (window.confirm('Bu öneriyi reddetmek istediğinize emin misiniz?')) {
-      setPendingPosts(pendingPosts.filter(p => p.id !== id));
+      setPendingPosts(prev => prev.filter(p => p.id !== id));
     }
   };
 
@@ -666,17 +680,14 @@ function App() {
               </div>
             ) : (
               <div className="pending-list">
-                {pendingPosts.map(post => (
-                  <div key={post.id} className="pending-card">
-                    <div className="pending-card-header">
-                      {post.image && <img src={post.image} alt={post.title} className="pending-thumb" />}
-                      <div className="pending-card-info">
-                        <h3>{post.title}</h3>
-                        <p>{post.summary}</p>
-                        <div className="pending-card-meta">
-                          <span className="pending-sender"><Send size={12} /> {post.submittedBy}</span>
-                          <span>•</span>
-                          <a href={post.link} target="_blank" rel="noopener noreferrer" className="pending-link">Linki Aç ↗</a>
+                {pendingPosts.map(post => {
+                  const edits = editingPending[post.id] || {};
+                  return (
+                    <div key={post.id} className="pending-card">
+                      <div className="pending-card-image">
+                        <img src={post.image} alt={post.title} />
+                        <div className="pending-card-sender-badge">
+                          <Send size={12} /> {post.submittedBy}
                         </div>
                         <div className="pending-card-categories">
                           {(post.categories || []).map(cat => (
@@ -684,17 +695,56 @@ function App() {
                           ))}
                         </div>
                       </div>
+                      <div className="pending-card-edit-area">
+                        <div className="pending-edit-group">
+                          <label>Başlık</label>
+                          <input
+                            type="text"
+                            value={edits.title !== undefined ? edits.title : post.title}
+                            onChange={e => updatePendingField(post.id, 'title', e.target.value)}
+                          />
+                        </div>
+                        <div className="pending-edit-group">
+                          <label>Link</label>
+                          <input
+                            type="text"
+                            value={edits.link !== undefined ? edits.link : post.link}
+                            onChange={e => updatePendingField(post.id, 'link', e.target.value)}
+                          />
+                        </div>
+                        <div className="pending-edit-group">
+                          <label>Özet Açıklama</label>
+                          <textarea
+                            rows="2"
+                            value={edits.summary !== undefined ? edits.summary : post.summary}
+                            onChange={e => updatePendingField(post.id, 'summary', e.target.value)}
+                          />
+                        </div>
+                        <div className="pending-edit-group">
+                          <label>Detaylı Açıklama</label>
+                          <textarea
+                            rows="3"
+                            value={edits.description !== undefined ? edits.description : (post.description || '')}
+                            onChange={e => updatePendingField(post.id, 'description', e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div className="pending-card-actions">
+                        <a href={edits.link || post.link} target="_blank" rel="noopener noreferrer" className="pending-link-btn" onClick={e => e.stopPropagation()}>
+                          Linki Aç ↗
+                        </a>
+                        <div className="pending-actions-right">
+                          <button type="button" className="reject-btn" onClick={(e) => rejectPost(e, post.id)}>
+                            <XCircle size={16} /> Reddet
+                          </button>
+                          <button type="button" className="approve-btn" onClick={(e) => approvePost(e, post)}>
+                            <CheckCircle size={16} /> Onayla
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <div className="pending-card-actions">
-                      <button className="approve-btn" onClick={() => approvePost(post)}>
-                        <CheckCircle size={16} /> Onayla
-                      </button>
-                      <button className="reject-btn" onClick={() => rejectPost(post.id)}>
-                        <XCircle size={16} /> Reddet
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
