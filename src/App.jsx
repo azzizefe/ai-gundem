@@ -69,13 +69,9 @@ const CATEGORIES_DATA = {
   'Backend': ['Node.js', 'Python', 'Go', 'PostgreSQL', 'Docker', 'Diğer'],
   'Mobil Geliştirme': ['Flutter', 'React Native', 'Swift', 'Kotlin', 'Diğer'],
   'Bulut Bilişim': ['AWS', 'Azure', 'Kubernetes', 'Serverless', 'Diğer'],
-  'Veri Bilimi': ['Pandas', 'Analiz', 'Big Data', 'Görselleştirme', 'Diğer'],
-  'Web3': ['Blockchain', 'Solidity', 'Ethereum', 'Smart Contracts', 'Diğer'],
-  'Tasarım': ['Figma', 'UI Design', 'UX Research', 'Prototipleme', 'Diğer'],
-  'Oyun Geliştirme': ['Unity', 'Unreal Engine', 'C#', '3D Modelleme', 'Diğer'],
-  'DevOps': ['CI/CD', 'Terraform', 'Jenkins', 'Monitoring', 'Diğer'],
-  'Veritabanı': ['NoSQL', 'SQL Optimization', 'Redis', 'MongoDB', 'Diğer'],
-  'Test': ['Unit Testing', 'Selenium', 'Cypress', 'QA', 'Diğer'],
+  'n8n': ['Otomasyon', 'Workflow', 'Node-RED', 'Entegrasyon', 'Diğer'],
+  'Görsel İçerik': ['Midjourney', 'DALL-E', 'Canva', 'Tasarım', 'Diğer'],
+  'Video İçerik': ['Sora', 'Runway', 'Pika', 'Kurgu', 'Diğer'],
   'Mimari': ['Microservices', 'Design Patterns', 'System Design', 'Diğer'],
   'Diğer': ['Genel', 'Kariyer', 'Haberler', 'Eğitim']
 };
