@@ -1,6 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Plus, LayoutGrid, Flame, Compass, Bookmark, Trash2, LogIn, LogOut, X, Camera, Info, Send, CheckCircle, XCircle, Clock, Edit2 } from 'lucide-react';
+import { Search, Bell, Plus, LayoutGrid, Flame, Compass, Bookmark, Trash2, LogIn, LogOut, X, Info, Send, CheckCircle, XCircle, Clock, Edit2 } from 'lucide-react';
+import { initializeApp } from "firebase/app";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, orderBy } from "firebase/firestore";
 import './App.css';
+
+// --- FIREBASE CONFIGURATION ---
+// Buraya Firebase konsolundan aldığınız bilgileri yapıştırın:
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+// Initialize Firebase (only if apiKey is provided)
+let db = null;
+if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+  const app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+}
 
 const INITIAL_POSTS = [
   {
@@ -62,6 +82,18 @@ const CATEGORIES_DATA = {
 
 const CATEGORIES = Object.keys(CATEGORIES_DATA);
 
+const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800&q=80';
+
+// Base64 veriyi temizle - localStorage sınırını aşmamak için
+const sanitizePostsForStorage = (posts) => {
+  return posts.map(post => {
+    if (post.image && post.image.startsWith('data:')) {
+      return { ...post, image: DEFAULT_IMAGE };
+    }
+    return post;
+  });
+};
+
 function App() {
   const [isLogged, setIsLogged] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -70,34 +102,64 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState('Hepsi');
   const [selectedTag, setSelectedTag] = useState(null);
   const [selectedCategoriesInForm, setSelectedCategoriesInForm] = useState([]);
-  const [imagePreview, setImagePreview] = useState(null);
   const [selectedInfoPost, setSelectedInfoPost] = useState(null);
   const [showSuggestForm, setShowSuggestForm] = useState(false);
   const [pendingPosts, setPendingPosts] = useState([]);
   const [showPendingModal, setShowPendingModal] = useState(false);
   const [suggestCategoriesInForm, setSuggestCategoriesInForm] = useState([]);
   const [editingPending, setEditingPending] = useState({});
-  const [suggestImagePreview, setSuggestImagePreview] = useState(null);
   const [editingPost, setEditingPost] = useState(null);
 
   // Load posts from backend
   // Load posts from backend (with fallback)
   useEffect(() => {
-    fetch('/api/posts')
-      .then(res => {
-        if (!res.ok) throw new Error('API Error');
-        return res.json();
-      })
-      .then(data => setPosts(data))
-      .catch(err => {
-        // Fallback to old key or new fallback key
-        const saved = localStorage.getItem('daily_dev_posts_fallback') || localStorage.getItem('daily_dev_posts');
-        if (saved && saved !== '[]') {
-          setPosts(JSON.parse(saved));
-        } else {
-          setPosts(INITIAL_POSTS);
+    const fetchPosts = async () => {
+      // 1. Try Firebase first (Shared Cloud Data)
+      if (db) {
+        try {
+          const q = query(collection(db, "posts"), orderBy("id", "desc"));
+          const querySnapshot = await getDocs(q);
+          const firebasePosts = querySnapshot.docs.map(doc => ({ ...doc.data(), firebaseId: doc.id }));
+          if (firebasePosts.length > 0) {
+            setPosts(firebasePosts);
+            return;
+          }
+        } catch (dbErr) {
+          console.error('Firebase fetching error:', dbErr);
         }
-      });
+      }
+
+      // 2. Try Node.js Backend (Local Dev)
+      try {
+        const res = await fetch('/api/posts');
+        if (!res.ok) throw new Error('API Error');
+        const data = await res.json();
+        setPosts(data);
+      } catch (err) {
+        console.warn('Backend API failed, trying static fallback...');
+        // 3. GitHub Pages static fallback
+        try {
+          const staticRes = await fetch(`${import.meta.env.BASE_URL}posts.json`);
+          if (!staticRes.ok) throw new Error('Static File Error');
+          const staticData = await staticRes.json();
+          setPosts(staticData);
+        } catch (staticErr) {
+          // 4. LocalStorage fallback
+          const saved = localStorage.getItem('daily_dev_posts_fallback') || localStorage.getItem('daily_dev_posts');
+          if (saved && saved !== '[]') {
+            try {
+              const parsed = JSON.parse(saved);
+              setPosts(sanitizePostsForStorage(parsed));
+            } catch (e) {
+              setPosts(INITIAL_POSTS);
+            }
+          } else {
+            setPosts(INITIAL_POSTS);
+          }
+        }
+      }
+    };
+    fetchPosts();
   }, []);
 
   // Load pending posts from localStorage
@@ -109,10 +171,16 @@ function App() {
   }, []);
 
   // Save to localStorage as a fallback backup whenever posts change
+  // Base64 resimleri temizle - localStorage sınırını aşmamak için
   useEffect(() => {
     if (posts.length > 0) {
-      localStorage.setItem('daily_dev_posts_fallback', JSON.stringify(posts));
-      localStorage.setItem('daily_dev_posts', JSON.stringify(posts));
+      const safePosts = sanitizePostsForStorage(posts);
+      try {
+        localStorage.setItem('daily_dev_posts_fallback', JSON.stringify(safePosts));
+        localStorage.setItem('daily_dev_posts', JSON.stringify(safePosts));
+      } catch (e) {
+        console.warn('localStorage kayıt hatası:', e);
+      }
     }
   }, [posts]);
 
@@ -126,37 +194,58 @@ function App() {
   }, [selectedCategory]);
 
   const addPost = async (newPost) => {
-    try {
-      const response = await fetch('/api/posts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newPost)
-      });
-      if (!response.ok) throw new Error('API Error');
-      const addedPost = await response.json();
-      setPosts([addedPost, ...posts]);
-    } catch (err) {
-      // Fallback
-      newPost.id = Date.now();
-      setPosts([newPost, ...posts]);
+    // Firebase Sync
+    if (db) {
+      try {
+        const docRef = await addDoc(collection(db, "posts"), newPost);
+        newPost.firebaseId = docRef.id;
+        setPosts([newPost, ...posts]);
+      } catch (e) {
+        console.error("Firebase Add Error:", e);
+      }
+    } else {
+      // API Fallback
+      try {
+        const response = await fetch('/api/posts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newPost)
+        });
+        if (!response.ok) throw new Error('API Error');
+        const addedPost = await response.json();
+        setPosts([addedPost, ...posts]);
+      } catch (err) {
+        // Fallback
+        newPost.id = Date.now();
+        setPosts([newPost, ...posts]);
+      }
     }
     setShowAdminForm(false);
     setSelectedCategoriesInForm([]);
-    setImagePreview(null);
   };
 
-  const deletePost = async (e, id) => {
+  const deletePost = async (e, post) => {
+    const id = post.id;
     e.preventDefault();
     e.stopPropagation();
     if (window.confirm('Bu gönderiyi silmek istediğinize emin misiniz?')) {
-      try {
-        const response = await fetch(`/api/posts/${id}`, {
-          method: 'DELETE'
-        });
-        if (!response.ok) throw new Error('API Error');
-        setPosts(posts.filter(p => p.id !== id));
-      } catch (err) {
-        setPosts(posts.filter(p => p.id !== id));
+      if (db && post.firebaseId) {
+        try {
+          await deleteDoc(doc(db, "posts", post.firebaseId));
+          setPosts(posts.filter(p => p.id !== id));
+        } catch (err) {
+          console.error("Firebase Delete Error:", err);
+        }
+      } else {
+        try {
+          const response = await fetch(`/api/posts/${id}`, {
+            method: 'DELETE'
+          });
+          if (!response.ok) throw new Error('API Error');
+          setPosts(posts.filter(p => p.id !== id));
+        } catch (err) {
+          setPosts(posts.filter(p => p.id !== id));
+        }
       }
     }
   };
@@ -167,8 +256,18 @@ function App() {
     setEditingPost({ ...post });
   };
 
-  const saveEditPost = () => {
-    setPosts(prev => prev.map(p => p.id === editingPost.id ? editingPost : p));
+  const saveEditPost = async () => {
+    if (db && editingPost.firebaseId) {
+      try {
+        const postRef = doc(db, "posts", editingPost.firebaseId);
+        await updateDoc(postRef, editingPost);
+        setPosts(prev => prev.map(p => p.id === editingPost.id ? editingPost : p));
+      } catch (err) {
+        console.error("Firebase Update Error:", err);
+      }
+    } else {
+      setPosts(prev => prev.map(p => p.id === editingPost.id ? editingPost : p));
+    }
     setEditingPost(null);
   };
 
@@ -189,25 +288,6 @@ function App() {
       prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
     );
   };
-  const handleImageChange = (e, isSuggest = false) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        alert('Resim boyutu çok büyük! Lütfen 2MB altı bir görsel seçin.');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (isSuggest) {
-          setSuggestImagePreview(reader.result);
-        } else {
-          setImagePreview(reader.result);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const handleSuggestCategoryToggle = (cat) => {
     setSuggestCategoriesInForm(prev =>
       prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
@@ -220,7 +300,6 @@ function App() {
     setPendingPosts([newPost, ...pendingPosts]);
     setShowSuggestForm(false);
     setSuggestCategoriesInForm([]);
-    setSuggestImagePreview(null);
     alert('Gönderi öneriniz alındı! Admin onayından sonra yayınlanacaktır.');
   };
 
@@ -405,7 +484,7 @@ function App() {
                   </button>
                 )}
                 {isLogged && (
-                  <button className="delete-btn" onClick={(e) => deletePost(e, post.id)}>
+                  <button className="delete-btn" onClick={(e) => deletePost(e, post)}>
                     <Trash2 size={16} />
                   </button>
                 )}
@@ -514,7 +593,7 @@ function App() {
                 description: formData.get('description') || '',
                 categories: selectedCategoriesInForm,
                 tag: formData.get('tag'),
-                image: imagePreview || 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800&q=80',
+                image: formData.get('imageUrl') || DEFAULT_IMAGE,
                 link: formData.get('link'),
                 author: "Yönetici",
                 date: "Bugün"
@@ -566,34 +645,12 @@ function App() {
                 <textarea name="description" rows="6" placeholder="Bilgi butonuna tıklandığında gösterilecek uzun açıklama metni yazın..." />
               </div>
               <div className="form-group">
-                <label>Fotoğraf</label>
-                <div className="image-upload-wrapper">
-                  <input
-                    type="file"
-                    id="image-upload"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="file-input-hidden"
-                  />
-                  <label htmlFor="image-upload" className="image-upload-label">
-                    {imagePreview ? (
-                      <div className="preview-container">
-                        <img src={imagePreview} alt="Preview" />
-                        <div className="preview-overlay">Resmi Değiştir</div>
-                      </div>
-                    ) : (
-                      <div className="upload-placeholder">
-                        <Camera size={32} />
-                        <span>Fotoğraf Seç</span>
-                      </div>
-                    )}
-                  </label>
-                </div>
+                <label>Fotoğraf URL'si</label>
+                <input name="imageUrl" placeholder="https://images.unsplash.com/... (boş bırakılırsa varsayılan kullanılır)" />
               </div>
               <div className="modal-actions">
                 <button type="button" className="cancel-btn" onClick={() => {
                   setShowAdminForm(false);
-                  setImagePreview(null);
                 }}>Vazgeç</button>
                 <button
                   type="submit"
@@ -637,7 +694,7 @@ function App() {
                 description: formData.get('description') || '',
                 categories: suggestCategoriesInForm,
                 tag: formData.get('tag'),
-                image: suggestImagePreview || 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800&q=80',
+                image: formData.get('imageUrl') || DEFAULT_IMAGE,
                 link: formData.get('link'),
                 author: formData.get('submittedBy').trim(),
                 submittedBy: formData.get('submittedBy').trim()
@@ -693,34 +750,12 @@ function App() {
                 <textarea name="description" rows="4" placeholder="Detaylı açıklama ekleyin..." />
               </div>
               <div className="form-group">
-                <label>Fotoğraf (İsteğe bağlı)</label>
-                <div className="image-upload-wrapper">
-                  <input
-                    type="file"
-                    id="suggest-image-upload"
-                    accept="image/*"
-                    onChange={(e) => handleImageChange(e, true)}
-                    className="file-input-hidden"
-                  />
-                  <label htmlFor="suggest-image-upload" className="image-upload-label">
-                    {suggestImagePreview ? (
-                      <div className="preview-container">
-                        <img src={suggestImagePreview} alt="Preview" />
-                        <div className="preview-overlay">Resmi Değiştir</div>
-                      </div>
-                    ) : (
-                      <div className="upload-placeholder">
-                        <Camera size={32} />
-                        <span>Fotoğraf Seç</span>
-                      </div>
-                    )}
-                  </label>
-                </div>
+                <label>Fotoğraf URL'si (İsteğe bağlı)</label>
+                <input name="imageUrl" placeholder="https://images.unsplash.com/... (boş bırakılırsa varsayılan kullanılır)" />
               </div>
               <div className="modal-actions">
                 <button type="button" className="cancel-btn" onClick={() => {
                   setShowSuggestForm(false);
-                  setSuggestImagePreview(null);
                 }}>Vazgeç</button>
                 <button
                   type="submit"
