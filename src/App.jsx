@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Plus, LayoutGrid, Flame, Compass, Bookmark, Trash2, LogIn, LogOut, X, Camera, Info } from 'lucide-react';
+import { Search, Bell, Plus, LayoutGrid, Flame, Compass, Bookmark, Trash2, LogIn, LogOut, X, Camera, Info, Send, CheckCircle, XCircle, Clock } from 'lucide-react';
 import './App.css';
 
 const INITIAL_POSTS = [
@@ -72,6 +72,11 @@ function App() {
   const [selectedCategoriesInForm, setSelectedCategoriesInForm] = useState([]);
   const [imagePreview, setImagePreview] = useState(null);
   const [selectedInfoPost, setSelectedInfoPost] = useState(null);
+  const [showSuggestForm, setShowSuggestForm] = useState(false);
+  const [pendingPosts, setPendingPosts] = useState([]);
+  const [showPendingModal, setShowPendingModal] = useState(false);
+  const [suggestCategoriesInForm, setSuggestCategoriesInForm] = useState([]);
+  const [suggestImagePreview, setSuggestImagePreview] = useState(null);
 
   // Load posts from backend
   // Load posts from backend (with fallback)
@@ -93,14 +98,26 @@ function App() {
       });
   }, []);
 
+  // Load pending posts from localStorage
+  useEffect(() => {
+    const savedPending = localStorage.getItem('ai_site_pending_posts');
+    if (savedPending) {
+      setPendingPosts(JSON.parse(savedPending));
+    }
+  }, []);
+
   // Save to localStorage as a fallback backup whenever posts change
   useEffect(() => {
     if (posts.length > 0) {
       localStorage.setItem('daily_dev_posts_fallback', JSON.stringify(posts));
-      // Migrate old data
       localStorage.setItem('daily_dev_posts', JSON.stringify(posts));
     }
   }, [posts]);
+
+  // Save pending posts to localStorage
+  useEffect(() => {
+    localStorage.setItem('ai_site_pending_posts', JSON.stringify(pendingPosts));
+  }, [pendingPosts]);
 
   useEffect(() => {
     setSelectedTag(null);
@@ -160,18 +177,52 @@ function App() {
       prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
     );
   };
-  const handleImageChange = (e) => {
+  const handleImageChange = (e, isSuggest = false) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) { // 2MB limit for localStorage
+      if (file.size > 2 * 1024 * 1024) {
         alert('Resim boyutu çok büyük! Lütfen 2MB altı bir görsel seçin.');
         return;
       }
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result);
+        if (isSuggest) {
+          setSuggestImagePreview(reader.result);
+        } else {
+          setImagePreview(reader.result);
+        }
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSuggestCategoryToggle = (cat) => {
+    setSuggestCategoriesInForm(prev =>
+      prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
+    );
+  };
+
+  const submitSuggestion = (newPost) => {
+    newPost.id = Date.now();
+    newPost.status = 'pending';
+    setPendingPosts([newPost, ...pendingPosts]);
+    setShowSuggestForm(false);
+    setSuggestCategoriesInForm([]);
+    setSuggestImagePreview(null);
+    alert('Gönderi öneriniz alındı! Admin onayından sonra yayınlanacaktır.');
+  };
+
+  const approvePost = (post) => {
+    const approvedPost = { ...post };
+    delete approvedPost.status;
+    approvedPost.date = 'Bugün';
+    setPosts([approvedPost, ...posts]);
+    setPendingPosts(pendingPosts.filter(p => p.id !== post.id));
+  };
+
+  const rejectPost = (id) => {
+    if (window.confirm('Bu öneriyi reddetmek istediğinize emin misiniz?')) {
+      setPendingPosts(pendingPosts.filter(p => p.id !== id));
     }
   };
 
@@ -227,9 +278,21 @@ function App() {
                 <li><Flame size={20} /> <span>Popüler</span></li>
                 <li><Compass size={20} /> <span>Keşfet</span></li>
                 <li><Bookmark size={20} /> <span>Yer İşaretleri</span></li>
+                <li className="suggest-post-item" onClick={() => setShowSuggestForm(true)}>
+                  <Send size={20} /> <span>Link Öner</span>
+                </li>
                 {isLogged && (
                   <li className="new-post-item" onClick={() => setShowAdminForm(true)}>
                     <Plus size={20} /> <span>Yeni Link Ekle</span>
+                  </li>
+                )}
+                {isLogged && (
+                  <li className="pending-item" onClick={() => setShowPendingModal(true)}>
+                    <Clock size={20} />
+                    <span>Onay Bekleyenler</span>
+                    {pendingPosts.length > 0 && (
+                      <span className="pending-badge">{pendingPosts.length}</span>
+                    )}
                   </li>
                 )}
               </ul>
@@ -299,6 +362,11 @@ function App() {
                       <span>•</span>
                       <span>{post.date}</span>
                     </div>
+                    {post.submittedBy && (
+                      <div className="submitted-by">
+                        <Send size={12} /> Öneren: {post.submittedBy}
+                      </div>
+                    )}
                   </div>
                 </a>
                 {post.description && (
@@ -452,6 +520,183 @@ function App() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Suggest Link Modal */}
+      {showSuggestForm && (
+        <div className="modal-overlay" onClick={() => setShowSuggestForm(false)}>
+          <div className="modal-content admin-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Link Öner</h2>
+              <button onClick={() => setShowSuggestForm(false)}><X size={24} /></button>
+            </div>
+            <div className="suggest-notice">
+              <Clock size={16} />
+              <span>Öneriniz admin onayından sonra yayınlanacaktır.</span>
+            </div>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.target);
+              if (suggestCategoriesInForm.length === 0) {
+                alert('Lütfen en az bir kategori seçin!');
+                return;
+              }
+              if (!formData.get('submittedBy').trim()) {
+                alert('Lütfen adınızı girin!');
+                return;
+              }
+              submitSuggestion({
+                title: formData.get('title'),
+                summary: formData.get('summary'),
+                description: formData.get('description') || '',
+                categories: suggestCategoriesInForm,
+                tag: formData.get('tag'),
+                image: suggestImagePreview || 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800&q=80',
+                link: formData.get('link'),
+                author: formData.get('submittedBy').trim(),
+                submittedBy: formData.get('submittedBy').trim()
+              });
+            }}>
+              <div className="form-group">
+                <label>Adınız / Kullanıcı Adınız *</label>
+                <input name="submittedBy" required placeholder="Adınızı yazın..." />
+              </div>
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Başlık *</label>
+                  <input name="title" required placeholder="Haber başlığı..." />
+                </div>
+                <div className="form-group">
+                  <label>Link *</label>
+                  <input name="link" required placeholder="https://..." />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Kategoriler (Birden fazla seçilebilir) *</label>
+                <div className="category-checkbox-list">
+                  {CATEGORIES.filter(c => c !== 'Hepsi').map(cat => (
+                    <label key={cat} className={`category-checkbox ${suggestCategoriesInForm.includes(cat) ? 'checked' : ''}`}>
+                      <input
+                        type="checkbox"
+                        checked={suggestCategoriesInForm.includes(cat)}
+                        onChange={() => handleSuggestCategoryToggle(cat)}
+                      />
+                      <span>{cat}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Baskın Etiket (İsteğe bağlı)</label>
+                <select name="tag">
+                  <option value="">Seçilmedi</option>
+                  {suggestCategoriesInForm.length > 0 && CATEGORIES_DATA[suggestCategoriesInForm[0]].map(t => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Özet Açıklama *</label>
+                <textarea name="summary" required placeholder="Okuyucular için kısa bir özet yazın..." />
+              </div>
+              <div className="form-group">
+                <label>Detaylı Açıklama (İsteğe bağlı)</label>
+                <textarea name="description" rows="4" placeholder="Detaylı açıklama ekleyin..." />
+              </div>
+              <div className="form-group">
+                <label>Fotoğraf (İsteğe bağlı)</label>
+                <div className="image-upload-wrapper">
+                  <input
+                    type="file"
+                    id="suggest-image-upload"
+                    accept="image/*"
+                    onChange={(e) => handleImageChange(e, true)}
+                    className="file-input-hidden"
+                  />
+                  <label htmlFor="suggest-image-upload" className="image-upload-label">
+                    {suggestImagePreview ? (
+                      <div className="preview-container">
+                        <img src={suggestImagePreview} alt="Preview" />
+                        <div className="preview-overlay">Resmi Değiştir</div>
+                      </div>
+                    ) : (
+                      <div className="upload-placeholder">
+                        <Camera size={32} />
+                        <span>Fotoğraf Seç</span>
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="cancel-btn" onClick={() => {
+                  setShowSuggestForm(false);
+                  setSuggestImagePreview(null);
+                }}>Vazgeç</button>
+                <button
+                  type="submit"
+                  className="submit-btn suggest-submit-btn"
+                  disabled={suggestCategoriesInForm.length === 0}
+                >
+                  <Send size={16} /> Öneriyi Gönder
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Pending Posts Modal (Admin Only) */}
+      {showPendingModal && isLogged && (
+        <div className="modal-overlay" onClick={() => setShowPendingModal(false)}>
+          <div className="modal-content pending-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Onay Bekleyen Gönderiler ({pendingPosts.length})</h2>
+              <button onClick={() => setShowPendingModal(false)}><X size={24} /></button>
+            </div>
+            {pendingPosts.length === 0 ? (
+              <div className="pending-empty">
+                <CheckCircle size={48} />
+                <p>Onay bekleyen gönderi yok!</p>
+              </div>
+            ) : (
+              <div className="pending-list">
+                {pendingPosts.map(post => (
+                  <div key={post.id} className="pending-card">
+                    <div className="pending-card-header">
+                      {post.image && <img src={post.image} alt={post.title} className="pending-thumb" />}
+                      <div className="pending-card-info">
+                        <h3>{post.title}</h3>
+                        <p>{post.summary}</p>
+                        <div className="pending-card-meta">
+                          <span className="pending-sender"><Send size={12} /> {post.submittedBy}</span>
+                          <span>•</span>
+                          <a href={post.link} target="_blank" rel="noopener noreferrer" className="pending-link">Linki Aç ↗</a>
+                        </div>
+                        <div className="pending-card-categories">
+                          {(post.categories || []).map(cat => (
+                            <span key={cat} className="post-category-tag">{cat}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="pending-card-actions">
+                      <button className="approve-btn" onClick={() => approvePost(post)}>
+                        <CheckCircle size={16} /> Onayla
+                      </button>
+                      <button className="reject-btn" onClick={() => rejectPost(post.id)}>
+                        <XCircle size={16} /> Reddet
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
