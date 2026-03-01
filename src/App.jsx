@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, Plus, LayoutGrid, Flame, Compass, Bookmark, Trash2, LogIn, LogOut, X, Info, Send, CheckCircle, XCircle, Clock, Edit2 } from 'lucide-react';
+import { Search, Bell, Plus, LayoutGrid, Flame, Compass, Bookmark, Trash2, LogIn, LogOut, X, Info, Send, CheckCircle, XCircle, Clock, Edit2, Code, BookOpen } from 'lucide-react';
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, query, orderBy } from "firebase/firestore";
 import './App.css';
@@ -23,41 +23,19 @@ if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
 }
 
 const INITIAL_POSTS = [
+
   {
-    id: 1,
-    title: "React Server Components Rehberi",
-    summary: "RSC'nin nasıl çalıştığı ve React geliştirmenin geleceği neden bu olduğu üzerine derinlemesine bir bakış.",
-    description: "React Server Components (RSC), React ekosisteminde devrim niteliğinde bir yenilik olarak karşımıza çıkıyor. Geleneksel client-side rendering yaklaşımından farklı olarak, RSC bileşenlerin sunucu tarafında render edilmesine olanak tanır. Bu sayede JavaScript bundle boyutu önemli ölçüde küçülür, sayfa yükleme süreleri dramatik şekilde iyileşir ve SEO performansı artar.\n\nRSC'nin temel avantajları arasında veritabanı sorgularının doğrudan bileşen içinden yapılabilmesi, hassas verilerin istemciye gönderilmemesi ve otomatik kod bölme (code splitting) yer alır. Ayrıca streaming SSR desteği sayesinde kullanıcılar sayfanın hazır olan kısımlarını anında görebilir.\n\nBu rehberde RSC mimarisini, Server ve Client bileşenleri arasındaki farkları, veri fetching stratejilerini ve production ortamında en iyi uygulamaları detaylı şekilde inceleyeceğiz.",
-    image: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&q=80",
-    categories: ["Frontend"],
-    tag: "React",
-    link: "https://react.dev",
-    author: "Dan Abramov",
-    date: "28 Şubat"
-  },
-  {
-    id: 2,
-    title: "Ölçeklenebilir Yapay Zeka Uygulamaları",
-    summary: "LLM'leri üretim ortamınıza entegre etmek için en iyi uygulamaları ve Chatbot stratejilerini öğrenin.",
-    description: "Büyük Dil Modelleri (LLM) artık sadece araştırma projelerinde değil, gerçek dünya uygulamalarında da aktif olarak kullanılıyor. Ancak bir LLM'i production ortamına taşımak, prototip aşamasından çok daha karmaşık bir süreçtir.\n\nBu kapsamlı rehberde, LLM tabanlı chatbot ve asistan uygulamalarını ölçeklenebilir şekilde nasıl tasarlayacağınızı öğreneceksiniz. Prompt engineering teknikleri, RAG (Retrieval-Augmented Generation) mimarisi, fine-tuning stratejileri ve maliyet optimizasyonu gibi kritik konuları ele alıyoruz.\n\nAyrıca rate limiting, token yönetimi, cache stratejileri, güvenlik önlemleri ve kullanıcı deneyimi tasarımı gibi production-grade konuları da detaylı şekilde inceliyoruz. Gerçek dünya örnekleri ve kod snippets ile desteklenen bu rehber, yapay zeka uygulamalarınızı bir sonraki seviyeye taşıyacak.",
-    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&q=80",
+    id: 'p1',
+    title: "OPENPLANTER",
+    summary: "Terminal tabanlı bir arayüze sahip, karmaşık veri setlerini analiz eden bir araç.",
+    description: "Terminal tabanlı bir arayüze sahip, karmaşık veri setlerini analiz ederek aralarındaki gizli bağlantıları keşfeden bir araç.",
     categories: ["Yapay Zeka"],
-    tag: "Chatbot",
-    link: "https://openai.com",
-    author: "Sam Altman",
-    date: "27 Şubat"
-  },
-  {
-    id: 3,
-    title: "2026 İçin En İyi 10 Güvenlik Duruşu",
-    summary: "Pentest ve modern sıfır gün açıklarına karşı altyapınızı nasıl koruyacağınızı öğrenin.",
-    description: "Siber güvenlik dünyası her geçen gün daha karmaşık hale geliyor ve 2026 yılı için hazırlıklı olmak şart. Bu makalede, altyapınızı korumak için uygulamanız gereken en kritik 10 güvenlik stratejisini ele alıyoruz.\n\nZero-day açıklarından korunma yöntemleri, penetrasyon testi (pentest) metodolojileri, ağ segmentasyonu, Zero Trust mimarisi, endpoint güvenliği ve olay müdahale planları gibi konuları derinlemesine inceliyoruz.\n\nAyrıca sosyal mühendislik saldırılarına karşı çalışan farkındalığı eğitimleri, bulut güvenliği best practice'leri, SIEM ve SOC operasyonları ve düzenleyici uyumluluk (KVKK, GDPR) gereksinimleri hakkında pratik bilgiler sunuyoruz. Her bir güvenlik duruşu, gerçek dünya saldırı senaryolarıyla desteklenerek açıklanmaktadır.",
-    image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80",
-    categories: ["Siber Güvenlik"],
-    tag: "Pentest",
-    link: "https://krebsonsecurity.com",
-    author: "Brian Krebs",
-    date: "26 Şubat"
+    tag: "Eğitim",
+    link: "https://github.com/ShinMegamiBoson/OpenPlanter",
+    isPaid: false,
+    image: "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80",
+    author: "Yönetici",
+    date: "Bugün"
   }
 ];
 
@@ -73,6 +51,8 @@ const CATEGORIES_DATA = {
   'Görsel İçerik': ['Midjourney', 'DALL-E', 'Canva', 'Tasarım', 'Diğer'],
   'Video İçerik': ['Sora', 'Runway', 'Pika', 'Kurgu', 'Diğer'],
   'Mimari': ['Microservices', 'Design Patterns', 'System Design', 'Diğer'],
+  'Projeler': ['Yapay Zeka', 'Web', 'Otomasyon', 'Uygulama', 'Diğer'],
+  'Kurslar': ['Yapay Zeka', 'Programlama', 'Tasarım', 'Pazarlama', 'Diğer'],
   'Diğer': ['Genel', 'Kariyer', 'Haberler', 'Eğitim']
 };
 
@@ -90,6 +70,16 @@ const sanitizePostsForStorage = (posts) => {
   });
 };
 
+const mergeWithInitialPosts = (loadedPosts) => {
+  const merged = [...loadedPosts];
+  INITIAL_POSTS.forEach(initialPost => {
+    if (!merged.find(p => p.id === initialPost.id)) {
+      merged.push(initialPost);
+    }
+  });
+  return merged;
+};
+
 function App() {
   const [isLogged, setIsLogged] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -105,6 +95,8 @@ function App() {
   const [suggestCategoriesInForm, setSuggestCategoriesInForm] = useState([]);
   const [editingPending, setEditingPending] = useState({});
   const [editingPost, setEditingPost] = useState(null);
+  const [isProjectForm, setIsProjectForm] = useState(false);
+  const [isCourseForm, setIsCourseForm] = useState(false);
 
   // Load posts from backend
   // Load posts from backend (with fallback)
@@ -117,7 +109,7 @@ function App() {
           const querySnapshot = await getDocs(q);
           const firebasePosts = querySnapshot.docs.map(doc => ({ ...doc.data(), firebaseId: doc.id }));
           if (firebasePosts.length > 0) {
-            setPosts(firebasePosts);
+            setPosts(mergeWithInitialPosts(firebasePosts));
             return;
           }
         } catch (dbErr) {
@@ -130,7 +122,7 @@ function App() {
         const res = await fetch('/api/posts');
         if (!res.ok) throw new Error('API Error');
         const data = await res.json();
-        setPosts(data);
+        setPosts(mergeWithInitialPosts(data));
       } catch (err) {
         console.warn('Backend API failed, trying static fallback...');
         // 3. GitHub Pages static fallback
@@ -138,14 +130,14 @@ function App() {
           const staticRes = await fetch(`${import.meta.env.BASE_URL}posts.json`);
           if (!staticRes.ok) throw new Error('Static File Error');
           const staticData = await staticRes.json();
-          setPosts(staticData);
+          setPosts(mergeWithInitialPosts(staticData));
         } catch (staticErr) {
           // 4. LocalStorage fallback
           const saved = localStorage.getItem('daily_dev_posts_fallback') || localStorage.getItem('daily_dev_posts');
           if (saved && saved !== '[]') {
             try {
               const parsed = JSON.parse(saved);
-              setPosts(sanitizePostsForStorage(parsed));
+              setPosts(mergeWithInitialPosts(sanitizePostsForStorage(parsed)));
             } catch (e) {
               setPosts(INITIAL_POSTS);
             }
@@ -376,13 +368,26 @@ function App() {
                   <LayoutGrid size={20} /> <span>Senin İçin</span>
                 </li>
                 <li><Flame size={20} /> <span>Popüler</span></li>
-                <li><Compass size={20} /> <span>Keşfet</span></li>
+                <li className={selectedCategory === 'Kurslar' ? 'active' : ''} onClick={() => setSelectedCategory('Kurslar')}>
+                  <BookOpen size={20} /> <span>Kurslar</span>
+                </li>
                 <li><Bookmark size={20} /> <span>Yer İşaretleri</span></li>
-                <li className="suggest-post-item" onClick={() => setShowSuggestForm(true)}>
+                <li className={selectedCategory === 'Projeler' ? 'active' : ''} onClick={() => setSelectedCategory('Projeler')}>
+                  <Code size={20} /> <span>Projeler</span>
+                </li>
+                <li className="suggest-post-item" onClick={() => {
+                  setIsProjectForm(false);
+                  setIsCourseForm(false);
+                  setShowSuggestForm(true);
+                }}>
                   <Send size={20} /> <span>Link Öner</span>
                 </li>
                 {isLogged && (
-                  <li className="new-post-item" onClick={() => setShowAdminForm(true)}>
+                  <li className="new-post-item" onClick={() => {
+                    setIsProjectForm(false);
+                    setIsCourseForm(false);
+                    setShowAdminForm(true);
+                  }}>
                     <Plus size={20} /> <span>Yeni Link Ekle</span>
                   </li>
                 )}
@@ -418,7 +423,35 @@ function App() {
         {/* Content */}
         <main className="content">
           <div className="feed-header">
-            <h1>{selectedCategory === 'Hepsi' ? 'Akış' : selectedCategory}</h1>
+            <div className="feed-title-row">
+              <h1>{selectedCategory === 'Hepsi' ? 'Akış' : selectedCategory}</h1>
+              {selectedCategory === 'Projeler' && (
+                <button
+                  className="add-project-btn"
+                  onClick={() => {
+                    setIsProjectForm(true);
+                    setIsCourseForm(false);
+                    setSelectedCategoriesInForm(['Projeler']);
+                    isLogged ? setShowAdminForm(true) : setShowSuggestForm(true);
+                  }}
+                >
+                  <Plus size={18} /> <span>Proje Ekle</span>
+                </button>
+              )}
+              {selectedCategory === 'Kurslar' && (
+                <button
+                  className="add-project-btn add-course-btn"
+                  onClick={() => {
+                    setIsProjectForm(false);
+                    setIsCourseForm(true);
+                    setSelectedCategoriesInForm(['Kurslar']);
+                    isLogged ? setShowAdminForm(true) : setShowSuggestForm(true);
+                  }}
+                >
+                  <Plus size={18} /> <span>Kurs Ekle</span>
+                </button>
+              )}
+            </div>
 
             {/* Tags Bar */}
             {CATEGORIES_DATA[selectedCategory] && CATEGORIES_DATA[selectedCategory].length > 0 && (
@@ -448,6 +481,11 @@ function App() {
                 <a href={post.link} target="_blank" rel="noopener noreferrer" className="post-card">
                   <div className="post-image">
                     <img src={post.image} alt={post.title} />
+                    {post.isPaid !== undefined && (
+                      <div className={`post-price-badge ${post.isPaid ? 'paid' : 'free'}`}>
+                        {post.isPaid ? 'Ücretli' : 'Ücretsiz'}
+                      </div>
+                    )}
                     <div className="post-categories">
                       {(post.categories || [post.category]).map(cat => (
                         <span key={cat} className="post-category-tag">{cat}</span>
@@ -585,65 +623,92 @@ function App() {
               addPost({
                 id: Date.now(),
                 title: formData.get('title'),
-                summary: formData.get('summary'),
+                summary: (isProjectForm || isCourseForm) ? formData.get('description').substring(0, 100) + '...' : formData.get('summary'),
                 description: formData.get('description') || '',
                 categories: selectedCategoriesInForm,
-                tag: formData.get('tag'),
-                image: formData.get('imageUrl') || DEFAULT_IMAGE,
-                link: formData.get('link'),
+                tag: isProjectForm ? "Fikir" : (isCourseForm ? "Eğitim" : formData.get('tag')),
+                image: isProjectForm ? "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&q=80" : (isCourseForm ? "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&q=80" : (formData.get('imageUrl') || DEFAULT_IMAGE)),
+                link: (isProjectForm || isCourseForm) ? "#" : formData.get('link'),
+                isPaid: formData.get('isPaid') === 'true',
                 author: "Yönetici",
                 date: "Bugün"
               });
             }}>
               <div className="form-grid">
                 <div className="form-group">
-                  <label>Başlık</label>
-                  <input name="title" required placeholder="Haber başlığı..." />
+                  <label>{(isProjectForm || isCourseForm) ? (isProjectForm ? 'Proje Adı' : 'Kurs Adı') : 'Başlık'}</label>
+                  <input name="title" required placeholder={isProjectForm ? "Proje adı..." : (isCourseForm ? "Kurs adı..." : "Haber başlığı...")} />
                 </div>
+                {!isProjectForm && !isCourseForm && (
+                  <div className="form-group">
+                    <label>Link</label>
+                    <input name="link" required placeholder="https://..." />
+                  </div>
+                )}
+              </div>
+
+              {isCourseForm && (
                 <div className="form-group">
-                  <label>Link</label>
-                  <input name="link" required placeholder="https://..." />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label>Kategoriler (Birden fazla seçilebilir)</label>
-                <div className="category-checkbox-list">
-                  {CATEGORIES.filter(c => c !== 'Hepsi').map(cat => (
-                    <label key={cat} className={`category-checkbox ${selectedCategoriesInForm.includes(cat) ? 'checked' : ''}`}>
-                      <input
-                        type="checkbox"
-                        checked={selectedCategoriesInForm.includes(cat)}
-                        onChange={() => handleCategoryToggle(cat)}
-                      />
-                      <span>{cat}</span>
+                  <label>Kurs Ücreti</label>
+                  <div className="price-toggle-group">
+                    <label className="price-radio">
+                      <input type="radio" name="isPaid" value="false" defaultChecked />
+                      <span>Ücretsiz</span>
                     </label>
-                  ))}
+                    <label className="price-radio">
+                      <input type="radio" name="isPaid" value="true" />
+                      <span>Ücretli</span>
+                    </label>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {!isProjectForm && !isCourseForm && (
+                <>
+                  <div className="form-group">
+                    <label>Kategoriler (Birden fazla seçilebilir)</label>
+                    <div className="category-checkbox-list">
+                      {CATEGORIES.filter(c => c !== 'Hepsi').map(cat => (
+                        <label key={cat} className={`category-checkbox ${selectedCategoriesInForm.includes(cat) ? 'checked' : ''}`}>
+                          <input
+                            type="checkbox"
+                            checked={selectedCategoriesInForm.includes(cat)}
+                            onChange={() => handleCategoryToggle(cat)}
+                          />
+                          <span>{cat}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Baskın Etiket (İsteğe bağlı)</label>
+                    <select name="tag">
+                      <option value="">Seçilmedi</option>
+                      {selectedCategoriesInForm.length > 0 && CATEGORIES_DATA[selectedCategoriesInForm[0]].map(t => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Özet Açıklama</label>
+                    <textarea name="summary" required placeholder="Okuyucular için kısa bir özet yazın..." />
+                  </div>
+                </>
+              )}
 
               <div className="form-group">
-                <label>Baskın Etiket (İsteğe bağlı)</label>
-                <select name="tag">
-                  <option value="">Seçilmedi</option>
-                  {selectedCategoriesInForm.length > 0 && CATEGORIES_DATA[selectedCategoriesInForm[0]].map(t => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
+                <label>Uzun Açıklama</label>
+                <textarea name="description" rows={(isProjectForm || isCourseForm) ? "10" : "6"} required={isProjectForm || isCourseForm} placeholder="Detaylı açıklama metni yazın..." />
               </div>
 
-              <div className="form-group">
-                <label>Özet Açıklama</label>
-                <textarea name="summary" required placeholder="Okuyucular için kısa bir özet yazın..." />
-              </div>
-              <div className="form-group">
-                <label>Detaylı Açıklama (Bilgi butonu için)</label>
-                <textarea name="description" rows="6" placeholder="Bilgi butonuna tıklandığında gösterilecek uzun açıklama metni yazın..." />
-              </div>
-              <div className="form-group">
-                <label>Fotoğraf URL'si</label>
-                <input name="imageUrl" placeholder="https://images.unsplash.com/... (boş bırakılırsa varsayılan kullanılır)" />
-              </div>
+              {!isProjectForm && !isCourseForm && (
+                <div className="form-group">
+                  <label>Fotoğraf URL'si</label>
+                  <input name="imageUrl" placeholder="https://images.unsplash.com/... (boş bırakılırsa varsayılan kullanılır)" />
+                </div>
+              )}
               <div className="modal-actions">
                 <button type="button" className="cancel-btn" onClick={() => {
                   setShowAdminForm(false);
@@ -686,12 +751,13 @@ function App() {
               }
               submitSuggestion({
                 title: formData.get('title'),
-                summary: formData.get('summary'),
+                summary: (isProjectForm || isCourseForm) ? formData.get('description').substring(0, 100) + '...' : formData.get('summary'),
                 description: formData.get('description') || '',
                 categories: suggestCategoriesInForm,
-                tag: formData.get('tag'),
-                image: formData.get('imageUrl') || DEFAULT_IMAGE,
-                link: formData.get('link'),
+                tag: isProjectForm ? "Fikir" : (isCourseForm ? "Eğitim" : formData.get('tag')),
+                image: isProjectForm ? "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&q=80" : (isCourseForm ? "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&q=80" : (formData.get('imageUrl') || DEFAULT_IMAGE)),
+                link: (isProjectForm || isCourseForm) ? "#" : formData.get('link'),
+                isPaid: formData.get('isPaid') === 'true',
                 author: formData.get('submittedBy').trim(),
                 submittedBy: formData.get('submittedBy').trim()
               });
@@ -702,53 +768,79 @@ function App() {
               </div>
               <div className="form-grid">
                 <div className="form-group">
-                  <label>Başlık *</label>
-                  <input name="title" required placeholder="Haber başlığı..." />
+                  <label>{(isProjectForm || isCourseForm) ? (isProjectForm ? 'Proje Adı *' : 'Kurs Adı *') : 'Başlık *'}</label>
+                  <input name="title" required placeholder={isProjectForm ? "Proje adı..." : (isCourseForm ? "Kurs adı..." : "Haber başlığı...")} />
                 </div>
+                {!isProjectForm && !isCourseForm && (
+                  <div className="form-group">
+                    <label>Link *</label>
+                    <input name="link" required placeholder="https://..." />
+                  </div>
+                )}
+              </div>
+
+              {isCourseForm && (
                 <div className="form-group">
-                  <label>Link *</label>
-                  <input name="link" required placeholder="https://..." />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label>Kategoriler (Birden fazla seçilebilir) *</label>
-                <div className="category-checkbox-list">
-                  {CATEGORIES.filter(c => c !== 'Hepsi').map(cat => (
-                    <label key={cat} className={`category-checkbox ${suggestCategoriesInForm.includes(cat) ? 'checked' : ''}`}>
-                      <input
-                        type="checkbox"
-                        checked={suggestCategoriesInForm.includes(cat)}
-                        onChange={() => handleSuggestCategoryToggle(cat)}
-                      />
-                      <span>{cat}</span>
+                  <label>Kurs Ücreti</label>
+                  <div className="price-toggle-group">
+                    <label className="price-radio">
+                      <input type="radio" name="isPaid" value="false" defaultChecked />
+                      <span>Ücretsiz</span>
                     </label>
-                  ))}
+                    <label className="price-radio">
+                      <input type="radio" name="isPaid" value="true" />
+                      <span>Ücretli</span>
+                    </label>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {!isProjectForm && !isCourseForm && (
+                <>
+                  <div className="form-group">
+                    <label>Kategoriler (Birden fazla seçilebilir) *</label>
+                    <div className="category-checkbox-list">
+                      {CATEGORIES.filter(c => c !== 'Hepsi').map(cat => (
+                        <label key={cat} className={`category-checkbox ${suggestCategoriesInForm.includes(cat) ? 'checked' : ''}`}>
+                          <input
+                            type="checkbox"
+                            checked={suggestCategoriesInForm.includes(cat)}
+                            onChange={() => handleSuggestCategoryToggle(cat)}
+                          />
+                          <span>{cat}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Baskın Etiket (İsteğe bağlı)</label>
+                    <select name="tag">
+                      <option value="">Seçilmedi</option>
+                      {suggestCategoriesInForm.length > 0 && CATEGORIES_DATA[suggestCategoriesInForm[0]].map(t => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Özet Açıklama *</label>
+                    <textarea name="summary" required placeholder="Okuyucular için kısa bir özet yazın..." />
+                  </div>
+                </>
+              )}
 
               <div className="form-group">
-                <label>Baskın Etiket (İsteğe bağlı)</label>
-                <select name="tag">
-                  <option value="">Seçilmedi</option>
-                  {suggestCategoriesInForm.length > 0 && CATEGORIES_DATA[suggestCategoriesInForm[0]].map(t => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
+                <label>Uzun Açıklama *</label>
+                <textarea name="description" rows={(isProjectForm || isCourseForm) ? "10" : "4"} required placeholder="Detaylı açıklama ekleyin..." />
               </div>
 
-              <div className="form-group">
-                <label>Özet Açıklama *</label>
-                <textarea name="summary" required placeholder="Okuyucular için kısa bir özet yazın..." />
-              </div>
-              <div className="form-group">
-                <label>Detaylı Açıklama (İsteğe bağlı)</label>
-                <textarea name="description" rows="4" placeholder="Detaylı açıklama ekleyin..." />
-              </div>
-              <div className="form-group">
-                <label>Fotoğraf URL'si (İsteğe bağlı)</label>
-                <input name="imageUrl" placeholder="https://images.unsplash.com/... (boş bırakılırsa varsayılan kullanılır)" />
-              </div>
+              {!isProjectForm && !isCourseForm && (
+                <div className="form-group">
+                  <label>Fotoğraf URL'si (İsteğe bağlı)</label>
+                  <input name="imageUrl" placeholder="https://images.unsplash.com/... (boş bırakılırsa varsayılan kullanılır)" />
+                </div>
+              )}
               <div className="modal-actions">
                 <button type="button" className="cancel-btn" onClick={() => {
                   setShowSuggestForm(false);

@@ -15,30 +15,7 @@ app.use(bodyParser.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'dist')));
 
 // Initial data if file doesn't exist
-const INITIAL_POSTS = [
-    {
-        id: 1,
-        title: "React Server Components Rehberi",
-        summary: "RSC'nin nasıl çalıştığı ve React geliştirmenin geleceği neden bu olduğu üzerine derinlemesine bir bakış.",
-        image: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&q=80",
-        categories: ["Frontend"],
-        tag: "React",
-        link: "https://react.dev",
-        author: "Dan Abramov",
-        date: "28 Şubat"
-    },
-    {
-        id: 2,
-        title: "Ölçeklenebilir Yapay Zeka Uygulamaları",
-        summary: "LLM'leri üretim ortamınıza entegre etmek için en iyi uygulamaları ve Chatbot stratejilerini öğrenin.",
-        image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&q=80",
-        categories: ["Yapay Zeka"],
-        tag: "Chatbot",
-        link: "https://openai.com",
-        author: "Sam Altman",
-        date: "27 Şubat"
-    }
-];
+const INITIAL_POSTS = [];
 
 // Load posts
 const loadPosts = () => {

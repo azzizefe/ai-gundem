@@ -185,9 +185,36 @@
   background-color: var(--bg-primary);
 }
 
-.feed-header h1 {
-  font-size: 2rem;
+.feed-title-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
   margin-bottom: 1rem;
+}
+
+.feed-title-row h1 {
+  margin-bottom: 0 !important;
+}
+
+.add-project-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, var(--accent), #ff6b9d);
+  color: white;
+  padding: 0.5rem 1.25rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(255, 62, 129, 0.2);
+}
+
+.add-project-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 62, 129, 0.4);
 }
 
 .tags-bar {
@@ -798,6 +825,78 @@
   50% {
     transform: scale(1.15);
   }
+}
+
+/* Course Specific Styles */
+.post-price-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  backdrop-filter: blur(4px);
+  z-index: 5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.post-price-badge.free {
+  background-color: rgba(34, 197, 94, 0.9);
+  color: white;
+}
+
+.post-price-badge.paid {
+  background-color: rgba(234, 179, 8, 0.9);
+  color: white;
+}
+
+.price-toggle-group {
+  display: flex;
+  gap: 1rem;
+  background-color: var(--bg-primary);
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  margin-top: 0.5rem;
+}
+
+.price-radio {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.price-radio:hover {
+  background-color: var(--bg-secondary);
+}
+
+.price-radio input {
+  width: auto !important;
+  margin: 0;
+}
+
+.price-radio span {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.price-radio input:checked+span {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.add-course-btn {
+  background: linear-gradient(135deg, #3b82f6, #6366f1) !important;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3) !important;
+}
+
+.add-course-btn:hover {
+  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.5) !important;
 }
 
 /* Suggest Notice */
